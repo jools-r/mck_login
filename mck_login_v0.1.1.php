@@ -511,21 +511,10 @@ class mck_login
             return false;
         }
         
-/*        $message = 
-*            gTxt('greeting').' '.$name.','.
-*            n.n.gTxt('your_password_is').': '.$password.
-*            n.n.gTxt('log_in_at').': '.$atts['log_in_url'];
-*/
-        $message =
-            $RealName.'様'.n.
-            'ブログLimoncinaへの登録を完了しました。'.n.n.
-            'ログインに必要な情報です:'.n.n.
-            'ユーザー名: '.$name.n.
-            'パスワード: '.$password.n.n.
-            'ここからブログLimoncinaへログインできます:'.n.
-            hu.$redirect.n.n.
-            'ありがとうございました。'.n.
-            'Limoncina';
+        $message = 
+            gTxt('greeting').' '.$name.','.
+            n.n.gTxt('your_password_is').': '.$password.
+            n.n.gTxt('log_in_at').': '.$atts['log_in_url'];
       
         if(txpMail($email, $atts['subject'], $message) === false) {
             self::error('could_not_mail');
