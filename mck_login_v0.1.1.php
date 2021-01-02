@@ -797,7 +797,7 @@ new mck_login();
         global $pretext, $sitename;
     
         $opt = lAtts(array(
-            'privs' => 7,
+            'privs' => 0,
             'action' => $pretext['request_uri'].'#mck_register_form',
             'id' => 'mck_register_form',
             'class' => 'mck_register_form',
