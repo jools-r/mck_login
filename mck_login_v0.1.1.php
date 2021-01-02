@@ -482,8 +482,15 @@ class mck_login
             if(fetch('email', 'txp_users', 'email', $email)) {
                 self::error('email_in_use');
             }
-        
-            self::error('username_taken');
+
+            /* -- removed
+             *    self::error('username_taken');
+             */
+            // -- FIX: spit error only if username already exists
+            if(fetch('name', 'txp_users', 'name' , $name)) {
+                self::error('username_taken');
+            }
+
             return false;
         }
         
