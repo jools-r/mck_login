@@ -2,9 +2,19 @@
 	Adds self-registering form. When form is completed correctly,
 	message is shown and user's auto-generated password is sent to
 	the provided email address.
+
+	Default privs level is 0 in the plugin.
+	Please set the desired level here:
+	0 -> No privileges (same as not logged in)
+	1 -> Publisher (top)
+	2 -> Managing Editor
+	3 -> Copy Editor
+	4 -> Staff Writer
+	5 -> Freelancer
+	6 -> Designer
 -->
 
-<txp:mck_register_form>
+<txp:mck_register_form privs="0">
 
 	<txp:mck_login_errors />
 
