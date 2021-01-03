@@ -1,5 +1,76 @@
-<?php 
+<?php
 
+// This is a PLUGIN TEMPLATE for Textpattern CMS.
+
+// Copy this file to a new name like abc_myplugin.php.  Edit the code, then
+// run this file at the command line to produce a plugin for distribution:
+// $ php abc_myplugin.php > abc_myplugin-0.1.txt
+
+// Plugin name is optional.  If unset, it will be extracted from the current
+// file name. Plugin names should start with a three letter prefix which is
+// unique and reserved for each plugin author ("abc" is just an example).
+// Uncomment and edit this line to override:
+$plugin['name'] = 'mck_login';
+
+// Allow raw HTML help, as opposed to Textile.
+// 0 = Plugin help is in Textile format, no raw HTML allowed (default).
+// 1 = Plugin help is in raw HTML.  Not recommended.
+# $plugin['allow_html_help'] = 1;
+
+$plugin['version'] = '0.1.1';
+$plugin['author'] = 'Jukka Svahn+Casalegno Marco';
+$plugin['author_uri'] = '';
+$plugin['description'] = 'Handles site-wide logins, sessions, password recovery and self-registering';
+
+// Plugin load order:
+// The default value of 5 would fit most plugins, while for instance comment
+// spam evaluators or URL redirectors would probably want to run earlier
+// (1...4) to prepare the environment for everything else that follows.
+// Values 6...9 should be considered for plugins which would work late.
+// This order is user-overrideable.
+$plugin['order'] = '5';
+
+// Plugin 'type' defines where the plugin is loaded
+// 0 = public              : only on the public side of the website (default)
+// 1 = public+admin        : on both the public and admin side
+// 2 = library             : only when include_plugin() or require_plugin() is called
+// 3 = admin               : only on the admin side (no AJAX)
+// 4 = admin+ajax          : only on the admin side (AJAX supported)
+// 5 = public+admin+ajax   : on both the public and admin side (AJAX supported)
+$plugin['type'] = '0';
+
+// Plugin "flags" signal the presence of optional capabilities to the core plugin loader.
+// Use an appropriately OR-ed combination of these flags.
+// The four high-order bits 0xf000 are available for this plugin's private use
+if (!defined('PLUGIN_HAS_PREFS')) define('PLUGIN_HAS_PREFS', 0x0001); // This plugin wants to receive "plugin_prefs.{$plugin['name']}" events
+if (!defined('PLUGIN_LIFECYCLE_NOTIFY')) define('PLUGIN_LIFECYCLE_NOTIFY', 0x0002); // This plugin wants to receive "plugin_lifecycle.{$plugin['name']}" events
+
+$plugin['flags'] = '0';
+
+// Plugin 'textpack' is optional. It provides i18n strings to be used in conjunction with gTxt().
+// Syntax:
+// ## arbitrary comment
+// #@event
+// #@language ISO-LANGUAGE-CODE
+// abc_string_name => Localized String
+
+/** Uncomment me, if you need a textpack
+$plugin['textpack'] = <<< EOT
+#@admin
+#@language en-gb
+abc_sample_string => Sample String
+abc_one_more => One more
+#@language de-de
+abc_sample_string => Beispieltext
+abc_one_more => Noch einer
+EOT;
+**/
+// End of textpack
+
+if (!defined('txpinterface'))
+        @include_once('zem_tpl.php');
+
+# --- BEGIN PLUGIN CODE ---
 /**
  * Handles site-wide logins, sessions and self-registering
  *
@@ -131,6 +202,7 @@ class mck_login
                 return;
             }
 
+            include_once txpath . '/lib/txplib_admin.php';
             include_once txpath . '/include/txp_auth.php';
             
             if (txp_validate($name, $pass, false) === false)
@@ -410,8 +482,15 @@ class mck_login
             if(fetch('email', 'txp_users', 'email', $email)) {
                 self::error('email_in_use');
             }
-        
-            self::error('username_taken');
+
+            /* -- removed
+             *    self::error('username_taken');
+             */
+            // -- FIX: spit error only if username already exists
+            if(fetch('name', 'txp_users', 'name' , $name)) {
+                self::error('username_taken');
+            }
+
             return false;
         }
         
@@ -443,7 +522,7 @@ class mck_login
             gTxt('greeting').' '.$name.','.
             n.n.gTxt('your_password_is').': '.$password.
             n.n.gTxt('log_in_at').': '.$atts['log_in_url'];
-        
+      
         if(txpMail($email, $atts['subject'], $message) === false) {
             self::error('could_not_mail');
             return false;
@@ -496,11 +575,12 @@ class mck_login
         if(6 > $length)
             self::error('password_too_short');
         
-        if($new_pass !== $old_pass)
+        if($new_pass !== $confirm_pass)
             self::error('passwords_do_not_match');
         
         $name = mck_login(array('name' => 'name'));
         
+        include_once txpath . '/lib/txplib_admin.php';
         include_once txpath . '/include/txp_auth.php';
             
         if(txp_validate($name, $old_pass, false) === false) {
@@ -1069,3 +1149,77 @@ new mck_login();
         if($thing !== NULL && !$void)
             return parse($thing);
     }
+
+# --- END PLUGIN CODE ---
+if (0) {
+?>
+<!--
+# --- BEGIN PLUGIN HELP ---
+h1. mck_login
+
+p. A public-side plugin for "Textpattern CMS":http://textpattern.com. Handles site-wide logins, sessions, password recovery and self-registering. Made by "Jukka Svahn":http://twitter.com/gocom and "Casalegno Marco":http://www.kreatore.it/.
+
+p. This repo branches from "Casalegno Marco's":http://www.kreatore.it/ Textpattern plugin, "mck_login":http://forum.textpattern.com/viewtopic.php?id=37380. While this mck_login "fork" doesn't really share any code with the original code base, it is based on it, initially started as a simple patch.
+
+p. The main idea [of mine] was to fix security issues the original release of mck_login had. Work started by removing the all of the code which was duplicated from Textpattern's core, and then fixing all the simple, yet critical, security issues.
+
+p. After patching everything and taking advantage of core features, I concentrated to adding number of new features. The content and layout which once was hard-coded to the plugin, became changeable with tags and localization strings. No longer a form was a single tag, but set of tag. After that came security enchantments; brute force prevention, form tokens to prevent CSRF attacks, nonces and time-limited, eventually expiring forms. And finally, tools for extending the plugins in form of callbacks events and hooks.
+
+h2. List of tags
+
+p. As the work progressed, mck_login's tag weaponry doubled.
+
+* @<txp:mck_login />@
+* @<txp:mck_login_if>@
+* @<txp:mck_login_form />@
+* @<txp:mck_register_form />@
+* @<txp:mck_password_form />@
+* @<txp:mck_reset_form />@
+* @<txp:mck_login_bouncer />@
+* @<txp:mck_login_token />@
+* @<txp:mck_login_errors />@
+
+p. Please see "./examples/":https://github.com/gocom/mck_login/tree/master/examples directory for usage instructions and examples. The "plugin's source (mck_login.php) includes":https://github.com/gocom/mck_login/blob/master/mck_login.php documentation (PHPdoc) and outlines all tag attributes and has embedded minimal inline-examples too.
+
+h2. Extending and callbacks
+
+p. The plugin comes with range of callback events, hooking points which 3rd party plugins/developers can use to integrate with mck_login inner-workings. This allows extending mck_login's feature set. For example adding anti-spam plugins, or extra form validation to the mix is no-brainer.
+
+* mck_login.reset_confirm
+* mck_login.reset_confirmed
+* mck_login.logout
+* mck_login.login
+* mck_login.invalid_login
+* mck_login.logged_in
+* mck_login.reset_form
+* mck_login.reset
+* mck_login.reset_sent
+* mck_login.register_form
+* mck_login.register
+* mck_login.registered
+* mck_login.login_form
+* mck_login.password_form
+* mck_login.save_password
+* mck_login.password_saved
+
+p. Hooking (registering callback) to the events happens with Textpattern's very own @register_callback()@ function, in the exact same fashion as one would normally do when writing a plugin for core Textpattern.
+
+p. See "/extending/abc_trap":https://github.com/gocom/mck_login/blob/master/extending/abc_trap.php for usage example. Abc_trap.php is an example plugin, that adds a hidden spam trap field to the registration form.
+
+h2. Installing mck_login
+
+p. Installing the plugin is easy, especially if you are already using "plugin cache directory":http://textpattern.net/wiki/index.php?title=Advanced_Preferences#Plugin_cache_directory_path. If you haven't, set it up (create a directory, set the path in your site Preferences).
+
+# Grab a copy of "mck_login.php":https://github.com/gocom/mck_login/blob/master/mck_login.php.
+# Copy and save it to your plugin cache directory (as @mck_login_v0.1.php@).
+# The plugin is installed and activated.
+
+p. You may also want to grab a localization file, a textpack.
+
+# "Grab a localization file from textpacks directory":https://github.com/gocom/mck_login/tree/master/textpacks. There are few languages available.
+# Copy and paste the files contents to your site's Language panel (TXP/Admin/Preferences > Language). At the bottom of the page you should see a _Install Textpack_ field.
+# --- END PLUGIN HELP ---
+-->
+<?php
+}
+?>
