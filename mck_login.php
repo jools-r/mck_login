@@ -149,7 +149,9 @@ class mck_login
 
     public function logOutHandler()
     {
-        if ($logout = gps('mck_logout') && $user = is_logged_in() && self::$action = 'logout')
+        $user = is_logged_in();
+
+        if ($logout = gps('mck_logout') && $user && self::$action = 'logout')
         {
             callback_event('mck_login.logout');
 
