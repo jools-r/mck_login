@@ -822,7 +822,7 @@ function mck_login_form($atts, $thing=''){
     }
 
     if(mck_login::error())
-        $class .= 'mck_login_error';
+        $class .= ' mck_login_error';
 
     mck_login_errors('login');
 
@@ -883,7 +883,7 @@ function mck_password_form($atts, $thing = '')
 
     if (mck_login::error())
     {
-        $class .= 'mck_login_error';
+        $class .= ' mck_login_error';
     }
 
     mck_login_errors('password');
