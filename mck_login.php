@@ -128,18 +128,18 @@ class mck_login
      *        mck_login::error('abc_l10n_string');
      * </code>
      */
-    
+
     static public function error($message=NULL, $type=NULL) {
-        
+
         if(!$type)
             $type = self::$action;
-        
+
         if(!isset(self::$form_errors[$type]))
             self::$form_errors[$type] = array();
-        
+
         if($message !== NULL)
             self::$form_errors[$type][] = $message;
-        
+
         return self::$form_errors[$type];
     }
 
@@ -204,7 +204,7 @@ class mck_login
 
             include_once txpath . '/lib/txplib_admin.php';
             include_once txpath . '/include/txp_auth.php';
-            
+
             if (txp_validate($name, $pass, false) === false)
             {
                 callback_event('mck_login.invalid_login');
@@ -250,33 +250,33 @@ class mck_login
         if ($reset = ps('mck_reset') && !is_logged_in())
         {
             self::$action = 'reset';
-            
+
             callback_event('mck_login.reset_confirm');
-            
+
             sleep(3);
 
             $confirm = pack('H*', $reset);
             $reset = substr($confirm, 5);
-            
+
             if (!strpos($reset, ';'))
             {
                 self::error('invalid_token');
                 return;
             }
-            
+
             $name = explode(';', $reset);
             $redirect = array_pop($name);
             $name = implode(';', $name);
-            
-            $r = 
+
+            $r =
                 safe_row(
                     'nonce, email',
                     'txp_users',
                     "name='".doSlash($name)."'"
                 );
-            
+
             $packed = pack('H*', substr(md5($r['nonce'] . $redirect), 0, 10)) . $name . ';' . $redirect;
-            
+
             if (!$r || !$r['nonce'] || $confirm !== $packed)
             {
                 sleep(3);
@@ -289,7 +289,7 @@ class mck_login
 
             $pass = generate_password(12);
             $hash = txp_hash_password($pass);
-            
+
             if (
                 safe_update(
                     'txp_users',
@@ -299,21 +299,21 @@ class mck_login
                 ) === false
             )
             {
-                
+
                 self::error('saving_failed');
                 return;
             }
-            
-            $message = 
+
+            $message =
                 gTxt('greeting').' '.$name.','.n.n.
                 gTxt('your_password_is').': '.$password.n.n.
                 gTxt('log_in_at').': '.hu.$redirect;
-            
-            $subject = 
-                gTxt('mck_login_your_new_password', 
+
+            $subject =
+                gTxt('mck_login_your_new_password',
                     array('{sitename}' => get_pref('sitename'))
                 );
-            
+
             if (txpMail($r['email'], $subject, $message) === false)
             {
                 self::error('could_not_mail');
@@ -337,62 +337,62 @@ class mck_login
      */
 
     static public function send_reset($atts) {
-        
+
         extract(doArray(array(
             'name' => ps('mck_reset_name'),
             'form' => ps('mck_reset_form'),
         ), 'trim'));
-        
+
         $is_logged_in = mck_login(true) !== false;
-        
+
         if(!$form || !strpos($form, ';') || $is_logged_in) {
             return false;
         }
-        
+
         self::$action = 'reset';
-        
+
         callback_event('mck_login.reset');
-        
+
         $form = explode(';', (string) $form);
-        
+
         if($form[1] != md5($form[0] . get_pref('blog_uid'))) {
             self::error('invalid_token');
             return false;
         }
-        
+
         if((int) $form[0] < @strtotime('-30 minutes')) {
             self::error('form_expired');
             return false;
         }
-        
-        $r = 
+
+        $r =
             safe_row(
                 'email, nonce',
                 'txp_users',
                 "name='".doSlash($name)."'"
             );
-        
+
         if(!$r) {
             self::error('invalid_username');
             return false;
         }
-        
-        $confirm = 
+
+        $confirm =
             bin2hex(
-                pack('H*', substr(md5($r['nonce'] . $atts['go_to_after']), 0, 10)). 
+                pack('H*', substr(md5($r['nonce'] . $atts['go_to_after']), 0, 10)).
                 $name . ';' . $atts['go_to_after']
             );
-        
-        $message = 
+
+        $message =
             gTxt('greeting').' '.$name.','.n.n.
             gTxt('password_reset_confirmation').': '.n.n.
             hu.'?mck_reset='.$confirm;
-        
+
         if(txpMail($r['email'], $atts['subject'], $message) === false) {
             self::error('could_not_mail');
             return false;
         }
-        
+
         callback_event('mck_login.reset_sent');
         return true;
     }
@@ -406,79 +406,79 @@ class mck_login
      */
 
     static public function add_user($atts) {
-    
+
         extract(doArray(array(
             'email' => ps('mck_register_email'),
             'name' => ps('mck_register_name'),
             'RealName' => ps('mck_register_realname'),
             'form' => ps('mck_register_form'),
         ), 'trim'));
-        
+
         if(!$form || !strpos($form, ';'))
             return false;
-        
+
         self::$action = 'register';
 
         callback_event('mck_login.register');
-        
+
         if(self::$form_errors)
             return false;
-        
+
         $ip = remote_addr();
-        
+
         if(is_blacklisted($ip)) {
             self::error('ip_blacklisted');
             return false;
         }
-        
+
         if(fetch('ip', 'txp_discuss_ipban', 'ip', $ip)) {
             self::error('you_have_been_banned');
             return false;
         }
-        
+
         if(!$email || !$name || !$RealName) {
             self::error('all_fields_required');
             return false;
         }
-        
+
         $form = explode(';', (string) $form);
-        
+
         if($form[1] != md5($form[0] . get_pref('blog_uid'))) {
             self::error('invalid_token');
             return false;
         }
-        
+
         if((int) $form[0] < @strtotime('-30 minutes')) {
             self::error('form_expired');
             return false;
         }
-        
+
         if(self::field_strlen($email) > 100)
             self::error('email_too_long');
-        
+
         elseif(!is_valid_email($email))
             self::error('invalid_email');
-        
+
         if(self::field_strlen($name) < 3)
             self::error('username_too_short');
-        
+
         elseif(self::field_strlen($name) > 64)
             self::error('username_too_long');
-        
+
         if(self::field_strlen($RealName) > 64)
             self::error('realname_too_long');
-        
+
         if(self::error())
             return false;
-        
+
         if(
             safe_row(
-                'name', 
+                'name',
                 'txp_users',
                 "name='".doSlash($name)."' OR email='".doSlash($email)."' LIMIT 0, 1"
             )
         ) {
-        
+
             if(fetch('email', 'txp_users', 'email', $email)) {
                 self::error('email_in_use');
             }
@@ -493,12 +493,12 @@ class mck_login
 
             return false;
         }
-        
+
         sleep(3);
-    
+
         include_once txpath . '/lib/txplib_admin.php';
         include_once txpath . '/include/txp_auth.php';
-    
+
         $password = generate_password(12);
         $hash = txp_hash_password($password);
         $privs = (int) $atts['privs'];
@@ -506,7 +506,7 @@ class mck_login
         if(
             safe_insert(
                 'txp_users',
-                "privs='{$privs}', 
+                "privs='{$privs}',
                 name='".doSlash($name)."',
                 email='".doSlash($email)."',
                 RealName='".doSlash($RealName)."',
@@ -517,17 +517,17 @@ class mck_login
             self::error('saving_failed');
             return false;
         }
-        
-        $message = 
+
+        $message =
             gTxt('greeting').' '.$name.','.
             n.n.gTxt('your_password_is').': '.$password.
             n.n.gTxt('log_in_at').': '.$atts['log_in_url'];
-      
+
         if(txpMail($email, $atts['subject'], $message) === false) {
             self::error('could_not_mail');
             return false;
         }
-        
+
         callback_event('mck_login.registered');
         return true;
     }
@@ -540,7 +540,7 @@ class mck_login
      */
 
     static public function save_password() {
-        
+
         extract(doArray(array(
             'old_pass' => ps('mck_password_old'),
             'new_pass' => ps('mck_password_new'),
@@ -548,51 +548,51 @@ class mck_login
             'token' => ps('mck_login_token'),
             'form' => ps('mck_password_form'),
         ), 'trim'));
-        
+
         if(!$form || mck_login(true) === false)
             return false;
-        
+
         self::$action = 'password';
-        
+
         callback_event('mck_login.save_password');
-        
+
         if(self::error())
             return false;
-        
+
         if(!$old_pass || !$new_pass || !$confirm_pass) {
             self::error('all_fields_required');
             return false;
         }
-        
+
         if($token != mck_login_token()) {
             self::error('invalid_csrf_token');
             return false;
         }
-        
-        $length = function_exists('mb_strlen') ? 
+
+        $length = function_exists('mb_strlen') ?
             mb_strlen($new_pass, 'UTF-8') : strlen($new_pass);
-        
+
         if(6 > $length)
             self::error('password_too_short');
-        
+
         if($new_pass !== $confirm_pass)
             self::error('passwords_do_not_match');
-        
+
         $name = mck_login(array('name' => 'name'));
-        
+
         include_once txpath . '/lib/txplib_admin.php';
         include_once txpath . '/include/txp_auth.php';
-            
+
         if(txp_validate($name, $old_pass, false) === false) {
             self::error('old_password_incorrect');
             sleep(3);
         }
-        
+
         if(self::error())
             return false;
-        
+
         $hash = txp_hash_password($new_pass);
-        
+
         if(
             safe_update(
                 'txp_users',
@@ -603,10 +603,10 @@ class mck_login
             self::error('saving_failed');
             return false;
         }
-        
+
         callback_event('mck_login.password_saved');
     }
-    
+
     /**
      * Get string length for pre-save validation.
      * @param string $str
@@ -617,12 +617,12 @@ class mck_login
 
     static public function field_strlen($str) {
         global $DB;
-        
+
         $version = (int) @$DB->version[0];
-        
+
         if(!function_exists('mb_strlen') || $version < 5)
             return strlen($str);
-        
+
         return mb_strlen($str, 'UTF-8');
     }
 }
@@ -651,9 +651,9 @@ new mck_login();
  */
 
     function mck_reset_form($atts, $thing=''){
-    
+
         global $pretext, $sitename;
-    
+
         $opt = lAtts(array(
             'action' => $pretext['request_uri'] . '#mck_reset_form',
             'id' => 'mck_reset_form',
@@ -661,35 +661,35 @@ new mck_login();
             'go_to_after' => '',
             'subject' => '['.$sitename.'] '.gTxt('password_reset_confirmation_request'),
         ), $atts);
-        
+
         if(mck_login(true) !== false)
             return;
-        
+
         $r = mck_login::send_reset($opt);
         extract($opt);
-        
+
         if($r === true && !mck_login::error())
             return parse(EvalElse($thing, false));
-        
+
         $token = ps('mck_reset_form');
-        
+
         if(!$token || !mck_login::error()) {
             $timestamp = strtotime('now');
             $token = $timestamp.';'.md5($timestamp . get_pref('blog_uid'));
         }
-        
+
         if(mck_login::error())
             $class .= ' mck_login_error';
-        
+
         mck_login_errors('reset');
-        
+
         $r =
             '<form method="post" id="'.htmlspecialchars($id).'" class="'.htmlspecialchars($class).'" action="'.htmlspecialchars($action).'">'.n.
                 hInput('mck_reset_form', $token).n.
                 parse(EvalElse($thing, true)).n.
                 callback_event('mck_login.reset_form').
             '</form>';
-        
+
         mck_login_errors(null);
         return $r;
     }
@@ -708,15 +708,15 @@ new mck_login();
 
     function mck_login($atts){
         static $data = NULL;
-        
+
         if($data === NULL) {
             $data = is_logged_in();
         }
-        
+
         if($atts === true) {
             return $data;
         }
-    
+
         extract(lAtts(array(
             'name' => 'RealName',
             'escape' => 1,
@@ -724,7 +724,7 @@ new mck_login();
 
         if(!$data || !isset($data[$name]))
             return;
-        
+
         return $escape ? htmlspecialchars($data[$name]) : $data[$name];
     }
 
@@ -773,7 +773,7 @@ new mck_login();
  * @param array $atts
  * @param int $atts[privs] Privileges the user is created with.
  * @param string $atts[action] Form's action (target location).
- * @param string $atts[id] Form's HTML id. 
+ * @param string $atts[id] Form's HTML id.
  * @param string $atts[class] Form's HTML class.
  * @param string $atts[log_in_url] "Log in at" URL used in the sent email.
  * @param string $atts[subject] Email message's subject.
@@ -793,9 +793,9 @@ new mck_login();
  */
 
     function mck_register_form($atts, $thing=''){
-    
+
         global $pretext, $sitename;
-    
+
         $opt = lAtts(array(
             'privs' => 0,
             'action' => $pretext['request_uri'].'#mck_register_form',
@@ -804,34 +804,34 @@ new mck_login();
             'log_in_url' => hu,
             'subject' => '['.$sitename.'] '.gTxt('your_new_password'),
         ), $atts);
-        
+
         $r = mck_login::add_user($opt);
         extract($opt);
-        
+
         if($r === true && !mck_login::error())
             return parse(EvalElse($thing, false));
-        
+
         $token = ps('mck_register_form');
-        
+
         if(!$token || mck_login::error()) {
             $timestamp = strtotime('now');
             $token = $timestamp.';'.md5($timestamp . get_pref('blog_uid'));
         }
-        
+
         if(mck_login::error())
             $class .= ' mck_login_error';
-        
+
         mck_login_errors('register');
-        
+
         $r =
             '<form method="post" id="'.htmlspecialchars($id).'" class="'.htmlspecialchars($class).'" action="'.htmlspecialchars($action).'">'.n.
                 hInput('mck_register_form', $token).n.
                 parse(EvalElse($thing, true)).n.
                 callback_event('mck_login.register_form').
             '</form>';
-        
+
         mck_login_errors(null);
-        
+
         return $r;
     }
 
@@ -856,39 +856,39 @@ new mck_login();
  */
 
     function mck_login_form($atts, $thing=''){
-        
+
         global $pretext;
-    
+
         extract(lAtts(array(
             'action' => $pretext['request_uri'].'#mck_login_form',
             'id' => 'mck_login_form',
             'class' => 'mck_login_form',
         ), $atts));
-        
+
         if(mck_login(true) !== false)
             return parse(EvalElse($thing, false));
-        
+
         $token = ps('mck_login_form');
-        
+
         if(!$token || mck_login::error()) {
             $timestamp = strtotime('now');
             $token = $timestamp.';'.md5($timestamp . get_pref('blog_uid'));
         }
-        
+
         if(mck_login::error())
             $class .= 'mck_login_error';
-        
+
         mck_login_errors('login');
-        
-        $thing = 
+
+        $thing =
             '<form method="post" id="'.htmlspecialchars($id).'" class="'.htmlspecialchars($class).'" action="'.htmlspecialchars($action).'">'.n.
                 hInput('mck_login_form', $token).n.
                 parse(EvalElse($thing, true)).n.
                 callback_event('mck_login.login_form').
             '</form>';
-        
+
         mck_login_errors(null);
-        
+
         return $thing;
     }
 
@@ -1059,15 +1059,15 @@ new mck_login();
  */
 
     function mck_login_errors($atts) {
-        
+
         static $parent = NULL;
-        
+
         if(is_string($atts) || $atts === NULL) {
             $parent = $atts;
             mck_login::$action = $atts;
             return;
         }
-        
+
         extract(lAtts(array(
             'for' => $parent,
             'wraptag' => 'ul',
@@ -1076,26 +1076,26 @@ new mck_login();
             'offset' => 0,
             'limit' => NULL,
         ), $atts));
-        
+
         $r = mck_login::error();
-        
+
         if(!$r)
             return;
-            
+
         if($offset || $limit)
             $r = array_slice($r, $offset, $limit);
-        
+
         $out = array();
-        
+
         foreach($r as $msg) {
             $pfx = gTxt('mck_login_'.$msg);
-            
-            $out[] = 
+
+            $out[] =
                 '<span class="mck_login_error_'.md5($msg).'">'.
                     ($pfx == 'mck_login_' . $msg  ? gTxt($msg) : $pfx).
                 '</span>';
         }
-        
+
         return $out ? doWrap($out, $wraptag, $break, $class) : '';
     }
 
@@ -1108,20 +1108,20 @@ new mck_login();
  */
 
     function mck_login_token() {
-        
+
         static $token;
-        
+
         if(!$token) {
 
-            $nonce = 
+            $nonce =
                 fetch(
-                    'nonce', 'txp_users', 'name', 
+                    'nonce', 'txp_users', 'name',
                     mck_login(array('name' => 'name'))
                 );
-            
+
             $token = md5($nonce . get_pref('blog_uid'));
         }
-        
+
         return $token;
     }
 
@@ -1137,15 +1137,15 @@ new mck_login();
 
     function mck_login_bouncer($void=NULL, $thing=NULL) {
         if(gps('mck_login_token') != mck_login_token()) {
-            
+
             sleep(3);
-        
+
             if($thing !== NULL)
                 return false;
-            
+
             txp_die(gTxt('mck_login_invalid_csrf_token'), '401');
         }
-        
+
         if($thing !== NULL && !$void)
             return parse($thing);
     }
