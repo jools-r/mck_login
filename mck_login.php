@@ -1,76 +1,5 @@
+
 <?php
-
-// This is a PLUGIN TEMPLATE for Textpattern CMS.
-
-// Copy this file to a new name like abc_myplugin.php.  Edit the code, then
-// run this file at the command line to produce a plugin for distribution:
-// $ php abc_myplugin.php > abc_myplugin-0.1.txt
-
-// Plugin name is optional.  If unset, it will be extracted from the current
-// file name. Plugin names should start with a three letter prefix which is
-// unique and reserved for each plugin author ("abc" is just an example).
-// Uncomment and edit this line to override:
-$plugin['name'] = 'mck_login';
-
-// Allow raw HTML help, as opposed to Textile.
-// 0 = Plugin help is in Textile format, no raw HTML allowed (default).
-// 1 = Plugin help is in raw HTML.  Not recommended.
-# $plugin['allow_html_help'] = 1;
-
-$plugin['version'] = '0.1.1';
-$plugin['author'] = 'Jukka Svahn+Casalegno Marco';
-$plugin['author_uri'] = '';
-$plugin['description'] = 'Handles site-wide logins, sessions, password recovery and self-registering';
-
-// Plugin load order:
-// The default value of 5 would fit most plugins, while for instance comment
-// spam evaluators or URL redirectors would probably want to run earlier
-// (1...4) to prepare the environment for everything else that follows.
-// Values 6...9 should be considered for plugins which would work late.
-// This order is user-overrideable.
-$plugin['order'] = '5';
-
-// Plugin 'type' defines where the plugin is loaded
-// 0 = public              : only on the public side of the website (default)
-// 1 = public+admin        : on both the public and admin side
-// 2 = library             : only when include_plugin() or require_plugin() is called
-// 3 = admin               : only on the admin side (no AJAX)
-// 4 = admin+ajax          : only on the admin side (AJAX supported)
-// 5 = public+admin+ajax   : on both the public and admin side (AJAX supported)
-$plugin['type'] = '0';
-
-// Plugin "flags" signal the presence of optional capabilities to the core plugin loader.
-// Use an appropriately OR-ed combination of these flags.
-// The four high-order bits 0xf000 are available for this plugin's private use
-if (!defined('PLUGIN_HAS_PREFS')) define('PLUGIN_HAS_PREFS', 0x0001); // This plugin wants to receive "plugin_prefs.{$plugin['name']}" events
-if (!defined('PLUGIN_LIFECYCLE_NOTIFY')) define('PLUGIN_LIFECYCLE_NOTIFY', 0x0002); // This plugin wants to receive "plugin_lifecycle.{$plugin['name']}" events
-
-$plugin['flags'] = '0';
-
-// Plugin 'textpack' is optional. It provides i18n strings to be used in conjunction with gTxt().
-// Syntax:
-// ## arbitrary comment
-// #@event
-// #@language ISO-LANGUAGE-CODE
-// abc_string_name => Localized String
-
-/** Uncomment me, if you need a textpack
-$plugin['textpack'] = <<< EOT
-#@admin
-#@language en-gb
-abc_sample_string => Sample String
-abc_one_more => One more
-#@language de-de
-abc_sample_string => Beispieltext
-abc_one_more => Noch einer
-EOT;
-**/
-// End of textpack
-
-if (!defined('txpinterface'))
-        @include_once('zem_tpl.php');
-
-# --- BEGIN PLUGIN CODE ---
 /**
  * Handles site-wide logins, sessions and self-registering
  *
@@ -667,49 +596,49 @@ if (class_exists("\Textpattern\Tag\Registry")) {
  * </code>
  */
 
-    function mck_reset_form($atts, $thing=''){
+function mck_reset_form($atts, $thing=''){
 
-        global $pretext, $sitename;
+    global $pretext, $sitename;
 
-        $opt = lAtts(array(
-            'action' => $pretext['request_uri'] . '#mck_reset_form',
-            'id' => 'mck_reset_form',
-            'class' => 'mck_reset_form',
-            'go_to_after' => '',
-            'subject' => '['.$sitename.'] '.gTxt('password_reset_confirmation_request'),
-        ), $atts);
+    $opt = lAtts(array(
+        'action' => $pretext['request_uri'] . '#mck_reset_form',
+        'id' => 'mck_reset_form',
+        'class' => 'mck_reset_form',
+        'go_to_after' => '',
+        'subject' => '['.$sitename.'] '.gTxt('password_reset_confirmation_request'),
+    ), $atts);
 
-        if(mck_login(true) !== false)
-            return;
+    if(mck_login(true) !== false)
+        return;
 
-        $r = mck_login::send_reset($opt);
-        extract($opt);
+    $r = mck_login::send_reset($opt);
+    extract($opt);
 
-        if($r === true && !mck_login::error())
-            return parse(EvalElse($thing, false));
+    if($r === true && !mck_login::error())
+        return parse(EvalElse($thing, false));
 
-        $token = ps('mck_reset_form');
+    $token = ps('mck_reset_form');
 
-        if(!$token || !mck_login::error()) {
-            $timestamp = strtotime('now');
-            $token = $timestamp.';'.md5($timestamp . get_pref('blog_uid'));
-        }
-
-        if(mck_login::error())
-            $class .= ' mck_login_error';
-
-        mck_login_errors('reset');
-
-        $r =
-            '<form method="post" id="'.htmlspecialchars($id).'" class="'.htmlspecialchars($class).'" action="'.htmlspecialchars($action).'">'.n.
-                hInput('mck_reset_form', $token).n.
-                parse(EvalElse($thing, true)).n.
-                callback_event('mck_login.reset_form').
-            '</form>';
-
-        mck_login_errors(null);
-        return $r;
+    if(!$token || !mck_login::error()) {
+        $timestamp = strtotime('now');
+        $token = $timestamp.';'.md5($timestamp . get_pref('blog_uid'));
     }
+
+    if(mck_login::error())
+        $class .= ' mck_login_error';
+
+    mck_login_errors('reset');
+
+    $r =
+        '<form method="post" id="'.htmlspecialchars($id).'" class="'.htmlspecialchars($class).'" action="'.htmlspecialchars($action).'">'.n.
+            hInput('mck_reset_form', $token).n.
+            parse(EvalElse($thing, true)).n.
+            callback_event('mck_login.reset_form').
+        '</form>';
+
+    mck_login_errors(null);
+    return $r;
+}
 
 /**
  * Return user data
@@ -723,27 +652,27 @@ if (class_exists("\Textpattern\Tag\Registry")) {
  * </code>
  */
 
-    function mck_login($atts){
-        static $data = NULL;
+function mck_login($atts){
+    static $data = NULL;
 
-        if($data === NULL) {
-            $data = is_logged_in();
-        }
-
-        if($atts === true) {
-            return $data;
-        }
-
-        extract(lAtts(array(
-            'name' => 'RealName',
-            'escape' => 1,
-        ),$atts));
-
-        if(!$data || !isset($data[$name]))
-            return;
-
-        return $escape ? htmlspecialchars($data[$name]) : $data[$name];
+    if($data === NULL) {
+        $data = is_logged_in();
     }
+
+    if($atts === true) {
+        return $data;
+    }
+
+    extract(lAtts(array(
+        'name' => 'RealName',
+        'escape' => 1,
+    ),$atts));
+
+    if(!$data || !isset($data[$name]))
+        return;
+
+    return $escape ? htmlspecialchars($data[$name]) : $data[$name];
+}
 
 /**
  * Check if the user is logged in, or that the specified value matches.
@@ -765,25 +694,25 @@ if (class_exists("\Textpattern\Tag\Registry")) {
  * &lt;/txp:mck_login_if&gt;
  */
 
-    function mck_login_if($atts, $thing = null)
+function mck_login_if($atts, $thing = null)
+{
+    extract(lAtts(array(
+        'name'  => null,
+        'value' => '',
+    ), $atts));
+
+    $r = ($data = mck_login(true)) !== false && ($name === null || isset($data[$name]) && $data[$name] === $value);
+
+    if ($thing !== null)
     {
-        extract(lAtts(array(
-            'name'  => null,
-            'value' => '',
-        ), $atts));
-
-        $r = ($data = mck_login(true)) !== false && ($name === null || isset($data[$name]) && $data[$name] === $value);
-
-        if ($thing !== null)
-        {
-            return parse(EvalElse($thing, $r));
-        }
-
-        if ($r === false)
-        {
-            txp_die(gTxt('auth_required'), 401);
-        }
+        return parse(EvalElse($thing, $r));
     }
+
+    if ($r === false)
+    {
+        txp_die(gTxt('auth_required'), 401);
+    }
+}
 
 /**
  * Register form
@@ -809,48 +738,48 @@ if (class_exists("\Textpattern\Tag\Registry")) {
  * </code>
  */
 
-    function mck_register_form($atts, $thing=''){
+function mck_register_form($atts, $thing=''){
 
-        global $pretext, $sitename;
+    global $pretext, $sitename;
 
-        $opt = lAtts(array(
-            'privs' => 0,
-            'action' => $pretext['request_uri'].'#mck_register_form',
-            'id' => 'mck_register_form',
-            'class' => 'mck_register_form',
-            'log_in_url' => hu,
-            'subject' => '['.$sitename.'] '.gTxt('your_new_password'),
-        ), $atts);
+    $opt = lAtts(array(
+        'privs' => 0,
+        'action' => $pretext['request_uri'].'#mck_register_form',
+        'id' => 'mck_register_form',
+        'class' => 'mck_register_form',
+        'log_in_url' => hu,
+        'subject' => '['.$sitename.'] '.gTxt('your_new_password'),
+    ), $atts);
 
-        $r = mck_login::add_user($opt);
-        extract($opt);
+    $r = mck_login::add_user($opt);
+    extract($opt);
 
-        if($r === true && !mck_login::error())
-            return parse(EvalElse($thing, false));
+    if($r === true && !mck_login::error())
+        return parse(EvalElse($thing, false));
 
-        $token = ps('mck_register_form');
+    $token = ps('mck_register_form');
 
-        if(!$token || mck_login::error()) {
-            $timestamp = strtotime('now');
-            $token = $timestamp.';'.md5($timestamp . get_pref('blog_uid'));
-        }
-
-        if(mck_login::error())
-            $class .= ' mck_login_error';
-
-        mck_login_errors('register');
-
-        $r =
-            '<form method="post" id="'.htmlspecialchars($id).'" class="'.htmlspecialchars($class).'" action="'.htmlspecialchars($action).'">'.n.
-                hInput('mck_register_form', $token).n.
-                parse(EvalElse($thing, true)).n.
-                callback_event('mck_login.register_form').
-            '</form>';
-
-        mck_login_errors(null);
-
-        return $r;
+    if(!$token || mck_login::error()) {
+        $timestamp = strtotime('now');
+        $token = $timestamp.';'.md5($timestamp . get_pref('blog_uid'));
     }
+
+    if(mck_login::error())
+        $class .= ' mck_login_error';
+
+    mck_login_errors('register');
+
+    $r =
+        '<form method="post" id="'.htmlspecialchars($id).'" class="'.htmlspecialchars($class).'" action="'.htmlspecialchars($action).'">'.n.
+            hInput('mck_register_form', $token).n.
+            parse(EvalElse($thing, true)).n.
+            callback_event('mck_login.register_form').
+        '</form>';
+
+    mck_login_errors(null);
+
+    return $r;
+}
 
 /**
  * Displays a login form
@@ -872,42 +801,42 @@ if (class_exists("\Textpattern\Tag\Registry")) {
  * </code>
  */
 
-    function mck_login_form($atts, $thing=''){
+function mck_login_form($atts, $thing=''){
 
-        global $pretext;
+    global $pretext;
 
-        extract(lAtts(array(
-            'action' => $pretext['request_uri'].'#mck_login_form',
-            'id' => 'mck_login_form',
-            'class' => 'mck_login_form',
-        ), $atts));
+    extract(lAtts(array(
+        'action' => $pretext['request_uri'].'#mck_login_form',
+        'id' => 'mck_login_form',
+        'class' => 'mck_login_form',
+    ), $atts));
 
-        if(mck_login(true) !== false)
-            return parse(EvalElse($thing, false));
+    if(mck_login(true) !== false)
+        return parse(EvalElse($thing, false));
 
-        $token = ps('mck_login_form');
+    $token = ps('mck_login_form');
 
-        if(!$token || mck_login::error()) {
-            $timestamp = strtotime('now');
-            $token = $timestamp.';'.md5($timestamp . get_pref('blog_uid'));
-        }
-
-        if(mck_login::error())
-            $class .= 'mck_login_error';
-
-        mck_login_errors('login');
-
-        $thing =
-            '<form method="post" id="'.htmlspecialchars($id).'" class="'.htmlspecialchars($class).'" action="'.htmlspecialchars($action).'">'.n.
-                hInput('mck_login_form', $token).n.
-                parse(EvalElse($thing, true)).n.
-                callback_event('mck_login.login_form').
-            '</form>';
-
-        mck_login_errors(null);
-
-        return $thing;
+    if(!$token || mck_login::error()) {
+        $timestamp = strtotime('now');
+        $token = $timestamp.';'.md5($timestamp . get_pref('blog_uid'));
     }
+
+    if(mck_login::error())
+        $class .= 'mck_login_error';
+
+    mck_login_errors('login');
+
+    $thing =
+        '<form method="post" id="'.htmlspecialchars($id).'" class="'.htmlspecialchars($class).'" action="'.htmlspecialchars($action).'">'.n.
+            hInput('mck_login_form', $token).n.
+            parse(EvalElse($thing, true)).n.
+            callback_event('mck_login.login_form').
+        '</form>';
+
+    mck_login_errors(null);
+
+    return $thing;
+}
 
 /**
  * Displays password changing form.
@@ -930,50 +859,50 @@ if (class_exists("\Textpattern\Tag\Registry")) {
  * &lt;/txp:mck_password_form&gt;
  */
 
-    function mck_password_form($atts, $thing = '')
+function mck_password_form($atts, $thing = '')
+{
+    global $pretext;
+
+    extract(lAtts(array(
+        'action' => $pretext['request_uri'].'#mck_password_form',
+        'id'     => 'mck_password_form',
+        'class'  => 'mck_password_form',
+    ), $atts));
+
+    if (mck_login(true) === false)
     {
-        global $pretext;
-
-        extract(lAtts(array(
-            'action' => $pretext['request_uri'].'#mck_password_form',
-            'id'     => 'mck_password_form',
-            'class'  => 'mck_password_form',
-        ), $atts));
-
-        if (mck_login(true) === false)
-        {
-            return;
-        }
-
-        $r = mck_login::save_password();
-
-        if ($r === true && !mck_login::error())
-        {
-            return parse(EvalElse($thing, false));
-        }
-
-        if (mck_login::error())
-        {
-            $class .= 'mck_login_error';
-        }
-
-        mck_login_errors('password');
-
-        $thing = tag_start('form', array(
-            'method' => 'post',
-            'action' => $action,
-            'id'     => $id,
-            'class'  => $class,
-        )).
-        hInput('mck_login_token', mck_login_token()).
-        hInput('mck_password_form', 1).
-        parse(EvalElse($thing, true)).
-        callback_event('mck_login.password_form').
-        tag_end('form');
-
-        mck_login_errors(null);
-        return $thing;
+        return;
     }
+
+    $r = mck_login::save_password();
+
+    if ($r === true && !mck_login::error())
+    {
+        return parse(EvalElse($thing, false));
+    }
+
+    if (mck_login::error())
+    {
+        $class .= 'mck_login_error';
+    }
+
+    mck_login_errors('password');
+
+    $thing = tag_start('form', array(
+        'method' => 'post',
+        'action' => $action,
+        'id'     => $id,
+        'class'  => $class,
+    )).
+    hInput('mck_login_token', mck_login_token()).
+    hInput('mck_password_form', 1).
+    parse(EvalElse($thing, true)).
+    callback_event('mck_login.password_form').
+    tag_end('form');
+
+    mck_login_errors(null);
+    return $thing;
+}
 
 /**
  * Renders a HTML form input.
@@ -984,81 +913,81 @@ if (class_exists("\Textpattern\Tag\Registry")) {
  * &lt;txp:mck_login_input type="text" name="foo" value="bar" /&gt;
  */
 
-    function mck_login_input($atts)
+function mck_login_input($atts)
+{
+    static $uid = 1;
+
+    $r = lAtts(array(
+        'type'     => 'text',
+        'name'     => '',
+        'value'    => '',
+        'class'    => 'mck_login_input',
+        'id'       => '',
+        'label'    => '',
+        'required' => 1,
+        'remember' => 1,
+    ), $atts, false);
+
+    extract($r);
+
+    if ($type == 'token')
     {
-        static $uid = 1;
-
-        $r = lAtts(array(
-            'type'     => 'text',
-            'name'     => '',
-            'value'    => '',
-            'class'    => 'mck_login_input',
-            'id'       => '',
-            'label'    => '',
-            'required' => 1,
-            'remember' => 1,
-        ), $atts, false);
-
-        extract($r);
-
-        if ($type == 'token')
-        {
-            return hInput('mck_login_token', mck_login_token());
-        }
-
-        if ($required)
-        {
-            $r['class'] .= ' mck_login_required';
-        }
-
-        if (isset($_POST[$name]))
-        {
-            if ($type == 'checkbox' && ps($name) == $value)
-            {
-                $r['checked'] = 'checked';
-            }
-
-            if ($type != 'password' && $remember)
-            {
-                $r['value'] = ps($name);
-            }
-
-            if (ps($name) === '' && $required)
-            {
-                $r['class'] .= ' mck_login_error';
-            }
-        }
-
-        if (!$id && $uid++)
-        {
-            $r['id'] = 'mck_login_' . md5($name . $uid);
-        }
-
-        if ($label)
-        {
-            $label = '<label for="'.txpspecialchars($r['id']).'">'.txpspecialchars($r['label']).'</label>'.n;
-        }
-
-        $r = array_merge((array) $atts, (array) $r);
-        unset($r['label']);
-
-        if ($required != 'required')
-        {
-            unset($r['required']);
-        }
-
-        $out = array();
-
-        foreach ($r as $name => $value)
-        {
-            if ($value !== '' || $name === 'value')
-            {
-                $out[] = txpspecialchars($name).'="'.txpspecialchars($value).'"';
-            }
-        }
-
-        return $label . '<input '. implode(' ', $out).' />';
+        return hInput('mck_login_token', mck_login_token());
     }
+
+    if ($required)
+    {
+        $r['class'] .= ' mck_login_required';
+    }
+
+    if (isset($_POST[$name]))
+    {
+        if ($type == 'checkbox' && ps($name) == $value)
+        {
+            $r['checked'] = 'checked';
+        }
+
+        if ($type != 'password' && $remember)
+        {
+            $r['value'] = ps($name);
+        }
+
+        if (ps($name) === '' && $required)
+        {
+            $r['class'] .= ' mck_login_error';
+        }
+    }
+
+    if (!$id && $uid++)
+    {
+        $r['id'] = 'mck_login_' . md5($name . $uid);
+    }
+
+    if ($label)
+    {
+        $label = '<label for="'.txpspecialchars($r['id']).'">'.txpspecialchars($r['label']).'</label>'.n;
+    }
+
+    $r = array_merge((array) $atts, (array) $r);
+    unset($r['label']);
+
+    if ($required != 'required')
+    {
+        unset($r['required']);
+    }
+
+    $out = array();
+
+    foreach ($r as $name => $value)
+    {
+        if ($value !== '' || $name === 'value')
+        {
+            $out[] = txpspecialchars($name).'="'.txpspecialchars($value).'"';
+        }
+    }
+
+    return $label . '<input '. implode(' ', $out).' />';
+}
 
 /**
  * Displays error messages
@@ -1075,46 +1004,46 @@ if (class_exists("\Textpattern\Tag\Registry")) {
  * </code>
  */
 
-    function mck_login_errors($atts) {
+function mck_login_errors($atts) {
 
-        static $parent = NULL;
+    static $parent = NULL;
 
-        if(is_string($atts) || $atts === NULL) {
-            $parent = $atts;
-            mck_login::$action = $atts;
-            return;
-        }
-
-        extract(lAtts(array(
-            'for' => $parent,
-            'wraptag' => 'ul',
-            'break' => 'li',
-            'class' => '',
-            'offset' => 0,
-            'limit' => NULL,
-        ), $atts));
-
-        $r = mck_login::error();
-
-        if(!$r)
-            return;
-
-        if($offset || $limit)
-            $r = array_slice($r, $offset, $limit);
-
-        $out = array();
-
-        foreach($r as $msg) {
-            $pfx = gTxt('mck_login_'.$msg);
-
-            $out[] =
-                '<span class="mck_login_error_'.md5($msg).'">'.
-                    ($pfx == 'mck_login_' . $msg  ? gTxt($msg) : $pfx).
-                '</span>';
-        }
-
-        return $out ? doWrap($out, $wraptag, $break, $class) : '';
+    if(is_string($atts) || $atts === NULL) {
+        $parent = $atts;
+        mck_login::$action = $atts;
+        return;
     }
+
+    extract(lAtts(array(
+        'for' => $parent,
+        'wraptag' => 'ul',
+        'break' => 'li',
+        'class' => '',
+        'offset' => 0,
+        'limit' => NULL,
+    ), $atts));
+
+    $r = mck_login::error();
+
+    if(!$r)
+        return;
+
+    if($offset || $limit)
+        $r = array_slice($r, $offset, $limit);
+
+    $out = array();
+
+    foreach($r as $msg) {
+        $pfx = gTxt('mck_login_'.$msg);
+
+        $out[] =
+            '<span class="mck_login_error_'.md5($msg).'">'.
+                ($pfx == 'mck_login_' . $msg  ? gTxt($msg) : $pfx).
+            '</span>';
+    }
+
+    return $out ? doWrap($out, $wraptag, $break, $class) : '';
+}
 
 /**
  * Generate a ciphered token.
@@ -1124,23 +1053,23 @@ if (class_exists("\Textpattern\Tag\Registry")) {
  * </code>
  */
 
-    function mck_login_token() {
+function mck_login_token() {
 
-        static $token;
+    static $token;
 
-        if(!$token) {
+    if(!$token) {
 
-            $nonce =
-                fetch(
-                    'nonce', 'txp_users', 'name',
-                    mck_login(array('name' => 'name'))
-                );
+        $nonce =
+            fetch(
+                'nonce', 'txp_users', 'name',
+                mck_login(array('name' => 'name'))
+            );
 
-            $token = md5($nonce . get_pref('blog_uid'));
-        }
-
-        return $token;
+        $token = md5($nonce . get_pref('blog_uid'));
     }
+
+    return $token;
+}
 
 /**
  * Bouncer. Checks token, and protects against CSRF attempts.
@@ -1152,91 +1081,17 @@ if (class_exists("\Textpattern\Tag\Registry")) {
  * </code>
  */
 
-    function mck_login_bouncer($void=NULL, $thing=NULL) {
-        if(gps('mck_login_token') != mck_login_token()) {
+function mck_login_bouncer($void=NULL, $thing=NULL) {
+    if(gps('mck_login_token') != mck_login_token()) {
 
-            sleep(3);
+        sleep(3);
 
-            if($thing !== NULL)
-                return false;
+        if($thing !== NULL)
+            return false;
 
-            txp_die(gTxt('mck_login_invalid_csrf_token'), '401');
-        }
-
-        if($thing !== NULL && !$void)
-            return parse($thing);
+        txp_die(gTxt('mck_login_invalid_csrf_token'), '401');
     }
 
-# --- END PLUGIN CODE ---
-if (0) {
-?>
-<!--
-# --- BEGIN PLUGIN HELP ---
-h1. mck_login
-
-p. A public-side plugin for "Textpattern CMS":http://textpattern.com. Handles site-wide logins, sessions, password recovery and self-registering. Made by "Jukka Svahn":http://twitter.com/gocom and "Casalegno Marco":http://www.kreatore.it/.
-
-p. This repo branches from "Casalegno Marco's":http://www.kreatore.it/ Textpattern plugin, "mck_login":http://forum.textpattern.com/viewtopic.php?id=37380. While this mck_login "fork" doesn't really share any code with the original code base, it is based on it, initially started as a simple patch.
-
-p. The main idea [of mine] was to fix security issues the original release of mck_login had. Work started by removing the all of the code which was duplicated from Textpattern's core, and then fixing all the simple, yet critical, security issues.
-
-p. After patching everything and taking advantage of core features, I concentrated to adding number of new features. The content and layout which once was hard-coded to the plugin, became changeable with tags and localization strings. No longer a form was a single tag, but set of tag. After that came security enchantments; brute force prevention, form tokens to prevent CSRF attacks, nonces and time-limited, eventually expiring forms. And finally, tools for extending the plugins in form of callbacks events and hooks.
-
-h2. List of tags
-
-p. As the work progressed, mck_login's tag weaponry doubled.
-
-* @<txp:mck_login />@
-* @<txp:mck_login_if>@
-* @<txp:mck_login_form />@
-* @<txp:mck_register_form />@
-* @<txp:mck_password_form />@
-* @<txp:mck_reset_form />@
-* @<txp:mck_login_bouncer />@
-* @<txp:mck_login_token />@
-* @<txp:mck_login_errors />@
-
-p. Please see "./examples/":https://github.com/gocom/mck_login/tree/master/examples directory for usage instructions and examples. The "plugin's source (mck_login.php) includes":https://github.com/gocom/mck_login/blob/master/mck_login.php documentation (PHPdoc) and outlines all tag attributes and has embedded minimal inline-examples too.
-
-h2. Extending and callbacks
-
-p. The plugin comes with range of callback events, hooking points which 3rd party plugins/developers can use to integrate with mck_login inner-workings. This allows extending mck_login's feature set. For example adding anti-spam plugins, or extra form validation to the mix is no-brainer.
-
-* mck_login.reset_confirm
-* mck_login.reset_confirmed
-* mck_login.logout
-* mck_login.login
-* mck_login.invalid_login
-* mck_login.logged_in
-* mck_login.reset_form
-* mck_login.reset
-* mck_login.reset_sent
-* mck_login.register_form
-* mck_login.register
-* mck_login.registered
-* mck_login.login_form
-* mck_login.password_form
-* mck_login.save_password
-* mck_login.password_saved
-
-p. Hooking (registering callback) to the events happens with Textpattern's very own @register_callback()@ function, in the exact same fashion as one would normally do when writing a plugin for core Textpattern.
-
-p. See "/extending/abc_trap":https://github.com/gocom/mck_login/blob/master/extending/abc_trap.php for usage example. Abc_trap.php is an example plugin, that adds a hidden spam trap field to the registration form.
-
-h2. Installing mck_login
-
-p. Installing the plugin is easy, especially if you are already using "plugin cache directory":http://textpattern.net/wiki/index.php?title=Advanced_Preferences#Plugin_cache_directory_path. If you haven't, set it up (create a directory, set the path in your site Preferences).
-
-# Grab a copy of "mck_login.php":https://github.com/gocom/mck_login/blob/master/mck_login.php.
-# Copy and save it to your plugin cache directory (as @mck_login_v0.1.php@).
-# The plugin is installed and activated.
-
-p. You may also want to grab a localization file, a textpack.
-
-# "Grab a localization file from textpacks directory":https://github.com/gocom/mck_login/tree/master/textpacks. There are few languages available.
-# Copy and paste the files contents to your site's Language panel (TXP/Admin/Preferences > Language). At the bottom of the page you should see a _Install Textpack_ field.
-# --- END PLUGIN HELP ---
--->
-<?php
+    if($thing !== NULL && !$void)
+        return parse($thing);
 }
-?>

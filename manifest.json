@@ -1,11 +1,10 @@
 {
     "name": "mck_login",
-    "description": "Handles site-wide logins, sessions and self-registering.",
-    "version": "0.0.0",
-    "type": 0,
-    "author": "",
-    "author_uri": "",
+    "version": "0.1.2",
+    "author": "Jukka Svahn, Casalegno Marco, gas-kirito, jools-r",
+    "author_uri": "https://github.com/jools-r/mck_login",
+    "description": "Public site-wide logins, sessions and self-registering.",
     "order": 5,
-    "flags": 0,
-    "help": {"file": ["./README.textile"]}
+    "type": 0,
+    "flags": 0
 }
