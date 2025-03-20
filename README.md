@@ -1,0 +1,101 @@
+# mck_login
+
+A public-side plugin for [Textpattern CMS](http://textpattern.com) for
+handling public site-wide logins, sessions, password recovery and
+self-registering.
+
+## Plugin tags
+
+The plugin comes with number of public-side tags for handling user
+logins, new user registrations, password reset and password change
+forms.
+
+- `<txp:mck_login />`
+- `<txp:mck_login_if>`
+- `<txp:mck_login_form />`
+- `<txp:mck_register_form />`
+- `<txp:mck_password_form />`
+- `<txp:mck_reset_form />`
+- `<txp:mck_login_bouncer />`
+- `<txp:mck_login_token />`
+- `<txp:mck_login_errors />`
+
+Please see
+[./examples/](https://github.com/jools-r/mck_login/tree/main/examples)
+directory for usage instructions and examples. The [plugin’s source
+(mck_login.php)
+includes](https://github.com/jools-r/mck_login/blob/main/mck_login.php)
+documentation (PHPdoc) and outlines all tag attributes and has embedded
+minimal inline-examples too. (All credits to [Jukka
+Svahn](https://github.com/jools-r/mck_login/))
+
+## Extending mck_login
+
+The plugin comes with range of callback events and hooks that allow
+third-party plugins/developers to integrate with mck_login inner
+workings and/or to extend mck_login’s feature set. Examples include
+adding anti-spam plugins or extra form validation.
+
+- mck_login.reset_confirm
+- mck_login.reset_confirmed
+- mck_login.logout
+- mck_login.login
+- mck_login.invalid_login
+- mck_login.logged_in
+- mck_login.reset_form
+- mck_login.reset
+- mck_login.reset_sent
+- mck_login.register_form
+- mck_login.register
+- mck_login.registered
+- mck_login.login_form
+- mck_login.password_form
+- mck_login.save_password
+- mck_login.password_saved
+
+Hook into (register callbacks) to these events using the Textpattern
+`register_callback()` function, following the same pattern used to hook
+into core callbacks when writing a Textpattern plugin.
+
+See
+[/extending/abc_trap](https://github.com/jools-r/mck_login/blob/main/extending/abc_trap.php)
+for an example plugin extension: abc_trap.php adds a hidden honeypot
+spam trap field to the registration form.
+
+## Installing mck_login
+
+Installing the plugin using the .txt file on the plugin’s [GitHub
+Releases](https://github.com/jools-r/mck_login/releases) page, as
+described in the [Textpattern
+documentation](https://docs.textpattern.com/administration/plugins-panel#uploading-plugins).
+
+## History
+
+Initially written by [Casalegno Marco](http://www.kreatore.it/), this
+plugin has been patched and then significantly reworked, rewritten and
+maintained by [Jukka Svahn](https://github.com/gocom). His account of
+this process follows:
+
+bq.. This repo branches from [Casalegno
+Marco’s](http://www.kreatore.it/) Textpattern plugin,
+[mck_login](http://forum.textpattern.com/viewtopic.php?id=37380). While
+this mck_login “fork” doesn’t really share any code with the original
+code base, it is based on it, initially started as a simple patch.
+
+The main idea \[of mine\] was to fix security issues the original
+release of mck_login had. Work started by removing the all of the code
+which was duplicated from Textpattern’s core, and then fixing all the
+simple, yet critical, security issues.
+
+After patching everything and taking advantage of core features, I
+concentrated to adding number of new features. The content and layout
+which once was hard-coded to the plugin, became changeable with tags and
+localization strings. No longer a form was a single tag, but set of tag.
+After that came security enchantments; brute force prevention, form
+tokens to prevent CSRF attacks, nonces and time-limited, eventually
+expiring forms. And finally, tools for extending the plugins in form of
+callbacks events and hooks.
+
+Later fixes have been made by
+[gas-kirito](https://github.com/gas-kirito/mck_login) and
+[jools-r](https://github.com/jools-r/mck_login).
