@@ -1,4 +1,3 @@
-
 <?php
 /**
  * Handles site-wide logins, sessions and self-registering
@@ -357,13 +356,8 @@ class mck_login
 
         $ip = remote_addr();
 
-        if(is_blacklisted($ip)) {
-            self::error('ip_blacklisted');
-            return false;
-        }
-
-        if(fetch('ip', 'txp_discuss_ipban', 'ip', $ip)) {
-            self::error('you_have_been_banned');
+        if(is_blocklisted($ip)) {
+            self::error('ip_blocklisted');
             return false;
         }
 
