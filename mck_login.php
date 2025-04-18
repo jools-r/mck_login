@@ -217,14 +217,15 @@ class mck_login
             include_once txpath . '/lib/txplib_admin.php';
             include_once txpath . '/include/txp_auth.php';
 
-            $pass = generate_password(12);
-            $hash = txp_hash_password($pass);
+            $password = Txp::get('\Textpattern\Password\Random')->generate(PASSWORD_LENGTH);
+            $hash = Txp::get('\Textpattern\Password\Hash')->hash($password);
+            $nonce = md5($name.pack('H*', md5(uniqid(mt_rand(), true))));
 
             if (
                 safe_update(
                     'txp_users',
                     "pass='".doSlash($hash)."',
-                    nonce='".doSlash(md5($name.pack('H*', md5(uniqid(mt_rand(), true)))))."'",
+                    nonce='".doSlash($nonce)."'",
                     "name='".doSlash($name)."'"
                 ) === false
             )
@@ -424,20 +425,13 @@ class mck_login
         include_once txpath . '/lib/txplib_admin.php';
         include_once txpath . '/include/txp_auth.php';
 
-        $password = generate_password(12);
-        $hash = txp_hash_password($password);
         $privs = (int) $atts['privs'];
 
+        $password = Txp::get('\Textpattern\Password\Random')->generate(PASSWORD_LENGTH);
+
         if(
-            safe_insert(
-                'txp_users',
-                "privs='{$privs}',
-                name='".doSlash($name)."',
-                email='".doSlash($email)."',
-                RealName='".doSlash($RealName)."',
-                nonce='".doSlash(md5(uniqid(mt_rand(), true)))."',
-                pass='".doSlash($hash)."'"
-            ) === false
+            create_user($name, $email, $password, $RealName, $privs)
+             === false
         ) {
             self::error('saving_failed');
             return false;
@@ -516,14 +510,8 @@ class mck_login
         if(self::error())
             return false;
 
-        $hash = txp_hash_password($new_pass);
-
         if(
-            safe_update(
-                'txp_users',
-                "pass='".doSlash($hash)."'",
-                "name='".doSlash($name)."'"
-            ) === false
+            change_user_password($name, $new_pass) === false
         ) {
             self::error('saving_failed');
             return false;
