@@ -177,7 +177,7 @@ class mck_login
 
     public function confirmResetHandler()
     {
-        if ($reset = ps('mck_reset') && !is_logged_in())
+        if (($reset = gps('mck_reset')) && !is_logged_in())
         {
             self::$action = 'reset';
 
