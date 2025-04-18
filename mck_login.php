@@ -200,7 +200,7 @@ class mck_login
 
             $r =
                 safe_row(
-                    'nonce, email',
+                    'nonce, email, RealName',
                     'txp_users',
                     "name='".doSlash($name)."'"
                 );
@@ -235,8 +235,15 @@ class mck_login
                 return;
             }
 
+            $authorLang = safe_field('val', 'txp_prefs', "name='language_ui' AND user_name = '".doSlash($name)."'");
+            $authorLang = ($authorLang) ? $authorLang : TEXTPATTERN_DEFAULT_LANG;
+
+            $txpLang = Txp::get('\Textpattern\L10n\Lang');
+            $txpLang->swapStrings($authorLang, 'admin, common');
+
             $message =
-                gTxt('greeting').' '.$name.','.n.n.
+                gTxt('salutation', array('{name}' => $r['RealName'])).n.n.
+                gTxt('your_login_is').': '.$name.n.n.
                 gTxt('your_password_is').': '.$password.n.n.
                 gTxt('log_in_at').': '.hu.$redirect;
 
@@ -244,6 +251,8 @@ class mck_login
                 gTxt('mck_login_your_new_password',
                     array('{sitename}' => get_pref('sitename'))
                 );
+
+            $txpLang->swapStrings(null);
 
             if (txpMail($r['email'], $subject, $message) === false)
             {
@@ -298,7 +307,7 @@ class mck_login
 
         $r =
             safe_row(
-                'email, nonce',
+                'email, nonce, RealName',
                 'txp_users',
                 "name='".doSlash($name)."'"
             );
@@ -314,12 +323,21 @@ class mck_login
                 $name . ';' . $atts['go_to_after']
             );
 
+        $authorLang = safe_field('val', 'txp_prefs', "name='language_ui' AND user_name = '".doSlash($name)."'");
+        $authorLang = ($authorLang) ? $authorLang : TEXTPATTERN_DEFAULT_LANG;
+
+        $txpLang = Txp::get('\Textpattern\L10n\Lang');
+        $txpLang->swapStrings($authorLang, 'admin, common');
+
+        $subject = '['.get_pref('sitename').'] '.gTxt('password_reset_confirmation_request');
         $message =
-            gTxt('greeting').' '.$name.','.n.n.
-            gTxt('password_reset_confirmation').': '.n.n.
+            gTxt('salutation', array('{name}' => $r['RealName'])).n.n.
+            gTxt('password_reset_confirmation').n.n.
             hu.'?mck_reset='.$confirm;
 
-        if(txpMail($r['email'], $atts['subject'], $message) === false) {
+        $txpLang->swapStrings(null);
+
+        if(txpMail($r['email'], $subject, $message) === false) {
             self::error('could_not_mail');
             return false;
         }
@@ -437,12 +455,22 @@ class mck_login
             return false;
         }
 
-        $message =
-            gTxt('greeting').' '.$name.','.
-            n.n.gTxt('your_password_is').': '.$password.
-            n.n.gTxt('log_in_at').': '.$atts['log_in_url'];
+        $authorLang = safe_field('val', 'txp_prefs', "name='language_ui' AND user_name = '".doSlash($name)."'");
+        $authorLang = ($authorLang) ? $authorLang : TEXTPATTERN_DEFAULT_LANG;
 
-        if(txpMail($email, $atts['subject'], $message) === false) {
+        $txpLang = Txp::get('\Textpattern\L10n\Lang');
+        $txpLang->swapStrings($authorLang, 'admin, common');
+
+        $subject = '['.get_pref('sitename').'] '.gTxt('your_new_password');
+        $message =
+            gTxt('salutation', array('{name}' => $RealName)).n.n.
+            gTxt('your_login_is').': '.$name.n.n.
+            gTxt('your_password_is').': '.$password.n.n.
+            gTxt('log_in_at').': '.$atts['log_in_url'];
+
+        $txpLang->swapStrings(null);
+
+        if(txpMail($email, $subject, $message) === false) {
             self::error('could_not_mail');
             return false;
         }
