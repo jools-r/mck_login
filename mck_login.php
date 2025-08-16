@@ -58,17 +58,16 @@ class mck_login
      */
 
     static public function error($message=NULL, $type=NULL) {
-
         if(!$type)
             $type = self::$action;
 
-        if(!isset(self::$form_errors[$type]))
+        if($type !== NULL && !isset(self::$form_errors[$type]))
             self::$form_errors[$type] = array();
 
         if($message !== NULL)
             self::$form_errors[$type][] = $message;
 
-        return self::$form_errors[$type];
+        return isset(self::$form_errors[$type]) ? self::$form_errors[$type] : array();
     }
 
     /**
