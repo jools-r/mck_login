@@ -937,14 +937,80 @@ function mck_login_input($atts)
         'label'    => '',
         'required' => 1,
         'remember' => 1,
+        'reveal'   => 0,
     ), $atts, false);
 
     extract($r);
+
+    $postamble = $wrapstart = $wrapend = '';
 
     if ($type == 'token')
     {
         return hInput('mck_login_token', mck_login_token());
     }
+
+    if ($type == 'password')
+    {
+        $r['class'] .= ' mck_login_pass';
+
+        if ($r['reveal']) {
+            $postamble .= '<div class="accessibility" id="mck_login_announce" aria-live="assertive"></div>';
+            $postamble .= Txp::get('\Textpattern\UI\Style')->setContent(<<<EOCSS
+.mck_login_pw_wrapper { display: inline-flex; }
+.mck_input_toggle { position: relative; display: flex; justify-content: center; align-items: center; box-shadow: unset; border-radius: 0; border-inline-start: 0; }
+.mck_input_toggle:active { top: unset; }
+.mck_input_toggle[aria-pressed="true"]  .show-pw { display: none; }
+.mck_input_toggle[aria-pressed="false"] .hide-pw { display: none; }
+EOCSS);
+            $postamble .= script_js(<<<EOJS
+const mck_login_inputWrapper = document.querySelector('.mck_login_pw_wrapper');
+const mck_login_pWord = document.querySelector('[name="mck_password_new"]');
+const mck_login_pWord_id = mck_login_pWord.id;
+const mck_login_announce = document.getElementById('mck_login_announce');
+const mck_login_toggleBtnHTML = `<button class="mck_input_toggle" type="button" id="mck_login_password_toggle" aria-pressed="false" aria-controls="`+mck_login_pWord_id+`" type="button">
+<svg class="show-pw" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 2c1.981 0 3.671.992 4.933 2.078 1.27 1.091 2.187 2.345 2.637 3.023a1.62 1.62 0 0 1 0 1.798c-.45.678-1.367 1.932-2.637 3.023C11.67 13.008 9.981 14 8 14c-1.981 0-3.671-.992-4.933-2.078C1.797 10.83.88 9.576.43 8.898a1.62 1.62 0 0 1 0-1.798c.45-.677 1.367-1.931 2.637-3.022C4.33 2.992 6.019 2 8 2ZM1.679 7.932a.12.12 0 0 0 0 .136c.411.622 1.241 1.75 2.366 2.717C5.176 11.758 6.527 12.5 8 12.5c1.473 0 2.825-.742 3.955-1.715 1.124-.967 1.954-2.096 2.366-2.717a.12.12 0 0 0 0-.136c-.412-.621-1.242-1.75-2.366-2.717C10.824 4.242 9.473 3.5 8 3.5c-1.473 0-2.825.742-3.955 1.715-1.124.967-1.954 2.096-2.366 2.717ZM8 10a2 2 0 1 1-.001-3.999A2 2 0 0 1 8 10Z"></path></svg>
+<svg class="hide-pw" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M.143 2.31a.75.75 0 0 1 1.047-.167l14.5 10.5a.75.75 0 1 1-.88 1.214l-2.248-1.628C11.346 13.19 9.792 14 8 14c-1.981 0-3.67-.992-4.933-2.078C1.797 10.832.88 9.577.43 8.9a1.619 1.619 0 0 1 0-1.797c.353-.533.995-1.42 1.868-2.305L.31 3.357A.75.75 0 0 1 .143 2.31Zm1.536 5.622A.12.12 0 0 0 1.657 8c0 .021.006.045.022.068.412.621 1.242 1.75 2.366 2.717C5.175 11.758 6.527 12.5 8 12.5c1.195 0 2.31-.488 3.29-1.191L9.063 9.695A2 2 0 0 1 6.058 7.52L3.529 5.688a14.207 14.207 0 0 0-1.85 2.244ZM8 3.5c-.516 0-1.017.09-1.499.251a.75.75 0 1 1-.473-1.423A6.207 6.207 0 0 1 8 2c1.981 0 3.67.992 4.933 2.078 1.27 1.091 2.187 2.345 2.637 3.023a1.62 1.62 0 0 1 0 1.798c-.11.166-.248.365-.41.587a.75.75 0 1 1-1.21-.887c.148-.201.272-.382.371-.53a.119.119 0 0 0 0-.137c-.412-.621-1.242-1.75-2.366-2.717C10.825 4.242 9.473 3.5 8 3.5Z"></path></svg>
+<span class="accessibility">Show/hide password</span>
+</button>`;
+
+mck_login_inputWrapper.insertAdjacentHTML('beforeend', mck_login_toggleBtnHTML);
+const toggleBtn = document.getElementById('mck_login_password_toggle');
+mck_login_inputWrapper.setAttribute('role', 'group');
+mck_login_inputWrapper.setAttribute('aria-labelledby', mck_login_pWord_id);
+
+toggleBtn.addEventListener('click', () => {
+  if (toggleBtn.getAttribute('aria-pressed') === 'false') {
+    toggleBtn.setAttribute('aria-pressed', 'true');
+    mck_login_pWord.setAttribute('type', 'text');
+    mck_login_announce.textContent = 'Password is visible';
+  } else {
+    mck_login_setPasswordDefaults(false);
+  }
+});
+
+function mck_login_setPasswordDefaults(ignore) {
+  toggleBtn.setAttribute('aria-pressed', 'false');
+  mck_login_pWord.setAttribute('type', 'password');
+  if (!ignore) {
+    mck_login_announce.textContent = 'Password is hidden';
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  document.getElementById('mck_password_form').querySelector('[type="submit"]').addEventListener('click', () => {
+    if (mck_login_pWord.checkValidity() && mck_login_pWord.getAttribute('type') === 'text') {
+      mck_login_setPasswordDefaults(true);
+    }
+  });
+});
+EOJS
+);
+            $wrapstart = '<div class="mck_login_pw_wrapper">';
+            $wrapend = '</div>';
+        }
+    }
+
+    unset ($r['reveal']);
 
     if ($required)
     {
@@ -997,7 +1063,7 @@ function mck_login_input($atts)
         }
     }
 
-    return $label . '<input '. implode(' ', $out).' />';
+    return $label.$wrapstart.'<input '.implode(' ', $out).'>'.$wrapend.$postamble;
 }
 
 /**
