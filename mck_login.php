@@ -507,7 +507,7 @@ class mck_login
         if(self::error())
             return false;
 
-        if(!$old_pass || !$new_pass || !$confirm_pass) {
+        if(!$old_pass || !$new_pass) {
             self::error('all_fields_required');
             return false;
         }
@@ -523,7 +523,7 @@ class mck_login
         if(6 > $length)
             self::error('password_too_short');
 
-        if($new_pass !== $confirm_pass)
+        if($confirm_pass && ($new_pass !== $confirm_pass))
             self::error('passwords_do_not_match');
 
         $name = mck_login(array('name' => 'name'));
