@@ -355,6 +355,8 @@ class mck_login
 
     static public function add_user($atts) {
 
+        callback_event('mck_login.register', '', 1);
+
         extract(doArray(array(
             'email' => ps('mck_register_email'),
             'name' => ps('mck_register_name'),
