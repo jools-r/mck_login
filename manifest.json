@@ -1,6 +1,6 @@
 {
     "name": "mck_login",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "author": "Jukka Svahn, Casalegno Marco, gas-kirito, jools-r",
     "author_uri": "https://github.com/jools-r/mck_login",
     "description": "Public site-wide logins, sessions and self-registering.",

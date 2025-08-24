@@ -57,4 +57,4 @@ The main idea [of mine] was to fix security issues the original release of mck_l
 
 After patching everything and taking advantage of core features, I concentrated to adding number of new features. The content and layout which once was hard-coded to the plugin, became changeable with tags and localization strings. No longer a form was a single tag, but set of tag. After that came security enchantments; brute force prevention, form tokens to prevent CSRF attacks, nonces and time-limited, eventually expiring forms. And finally, tools for extending the plugins in form of callbacks events and hooks.
 
-p. Later fixes have been made by "gas-kirito":https://github.com/gas-kirito/mck_login and "jools-r":https://github.com/jools-r/mck_login.
+p. Later fixes and contributions by "gas-kirito":https://github.com/gas-kirito/mck_login,  "jools-r":https://github.com/jools-r/mck_login and "Stef Dawson":https://github.com/bloke/mck_login.

@@ -1,40 +1,40 @@
 
 <!--
 	Displays a login form for users that are not logged in,
-	and a log out link for rest. All registered users can use 
+	and a log out link for rest. All registered users can use
 	the form to log in.
 -->
 
 <txp:mck_login_form>
 
 	<txp:mck_login_errors />
-	
-	<txp:mck_login_input 
-		type="text" 
+
+	<txp:mck_login_input
+		type="text"
 		name="mck_login_name"
-		label="Login" 
-	/>
-	
-	<txp:mck_login_input 
-		type="password" 
+		label="Login"
+	/><br>
+
+	<txp:mck_login_input
+		type="password"
 		name="mck_login_pass"
-		label="Password" 
+		label="Password"
 	/>
-	
+
 	<p>
-		<txp:mck_login_input 
-			type="checkbox" 
-			name="mck_login_stay" 
-			value="1" 
-			label="Remember me?" 
+		<txp:mck_login_input
+			type="checkbox"
+			name="mck_login_stay"
+			value="1"
+			label="Remember me?"
 		/>
 	</p>
-	
+
 	<p><button type="submit">Log in</button></p>
 
 <txp:else />
 	<p>
-		Welcome, <txp:mck_login name="RealName" /> 
+		Welcome, <txp:mck_login name="RealName" />
 		<a href="?mck_logout=1">Log out</a>.
 	</p>
 </txp:mck_login_form>
