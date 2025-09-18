@@ -568,15 +568,7 @@ class mck_login
 
     public static function field_strlen($str)
     {
-        global $DB;
-
-        $version = (int) @$DB->version[0];
-
-        if (!function_exists('mb_strlen') || $version < 5) {
-            return strlen($str);
-        }
-
-        return mb_strlen($str, 'UTF-8');
+        return Txp::get('\Textpattern\Type\StringType', $str)->getLength();
     }
 }
 
