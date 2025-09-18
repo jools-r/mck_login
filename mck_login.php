@@ -635,7 +635,7 @@ function mck_reset_form($atts, $thing = '')
     extract($opt);
 
     if ($r === true && !mck_login::error()) {
-        return parse(EvalElse($thing, false));
+        return parse($thing, false);
     }
 
     $token = ps('mck_reset_form');
@@ -654,7 +654,7 @@ function mck_reset_form($atts, $thing = '')
     $r =
         '<form method="post" id="'.htmlspecialchars($id).'" class="'.htmlspecialchars($class).'" action="'.htmlspecialchars($action).'">'.n.
                 hInput('mck_reset_form', $token).n.
-                parse(EvalElse($thing, true)).n.
+                parse($thing, true).n.
                 callback_event('mck_login.reset_form').
         '</form>';
 
@@ -734,7 +734,7 @@ function mck_login_if($atts, $thing = null)
     $r = ($data = mck_login(true)) !== false && ($name === null || isset($data[$name]) && $data[$name] === $value);
 
     if ($thing !== null) {
-        return parse(EvalElse($thing, $r));
+        return parse($thing, $r);
     }
 
     if ($r === false) {
@@ -786,7 +786,7 @@ function mck_register_form($atts, $thing = '')
     extract($opt);
 
     if ($r === true && !mck_login::error()) {
-        return parse(EvalElse($thing, false));
+        return parse($thing, false);
     }
 
     $token = ps('mck_register_form');
@@ -805,7 +805,7 @@ function mck_register_form($atts, $thing = '')
     $r =
         '<form method="post" id="'.htmlspecialchars($id).'" class="'.htmlspecialchars($class).'" action="'.htmlspecialchars($action).'">'.n.
                 hInput('mck_register_form', $token).n.
-                parse(EvalElse($thing, true)).n.
+                parse($thing, true).n.
                 callback_event('mck_login.register_form').
         '</form>';
 
@@ -848,7 +848,7 @@ function mck_login_form($atts, $thing = '')
     );
 
     if (mck_login(true) !== false) {
-        return parse(EvalElse($thing, false));
+        return parse($thing, false);
     }
 
     $token = ps('mck_login_form');
@@ -867,7 +867,7 @@ function mck_login_form($atts, $thing = '')
     $thing =
         '<form method="post" id="'.htmlspecialchars($id).'" class="'.htmlspecialchars($class).'" action="'.htmlspecialchars($action).'">'.n.
                 hInput('mck_login_form', $token).n.
-                parse(EvalElse($thing, true)).n.
+                parse($thing, true).n.
                 callback_event('mck_login.login_form').
         '</form>';
 
@@ -917,7 +917,7 @@ function mck_password_form($atts, $thing = '')
     $r = mck_login::save_password();
 
     if ($r === true && !mck_login::error()) {
-        return parse(EvalElse($thing, false));
+        return parse($thing, false);
     }
 
     if (mck_login::error()) {
@@ -934,7 +934,7 @@ function mck_password_form($atts, $thing = '')
         )).
         hInput('mck_login_token', mck_login_token()).
         hInput('mck_password_form', 1).
-        parse(EvalElse($thing, true)).
+        parse($thing, true).
         callback_event('mck_login.password_form').
         tag_end('form');
 
