@@ -1,0 +1,29 @@
+<!--
+	A form that allows a user to change their email or Realname.
+	Nothing will be shown to those that are not logged in.
+-->
+
+<txp:mck_update_form>
+
+	<txp:mck_login_errors />
+
+	<txp:mck_login_input
+		type="text"
+		name="mck_update_email"
+		label="Your email address"
+	/><br>
+
+	<txp:mck_login_input
+		type="text"
+		name="mck_update_realname"
+		label="Your real name"
+	/>
+
+	<p><button type="submit">Update user details</button></p>
+<txp:else />
+	<p>Your user details have been updated.</p>
+</txp:mck_update_form>
+
+<!--
+	@uses mck_update_form, mck_login_input, mck_login_errors
+-->

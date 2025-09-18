@@ -482,6 +482,119 @@ class mck_login
     }
 
     /**
+     * Update an existing user
+     * @param array $atts
+     * @return bool
+     * @access private
+     */
+
+    public static function update_user($atts)
+    {
+        callback_event('mck_login.update', '', 1);
+
+        extract(doArray(
+            array(
+                'email' => ps('mck_update_email'),
+                'name' => ps('mck_update_name'),
+                'RealName' => ps('mck_update_realname'),
+                'form' => ps('mck_update_form'),
+            ),
+            'trim')
+        );
+
+        if (!$form || !strpos($form, ';')) {
+            return false;
+        }
+
+        self::$action = 'update';
+
+        callback_event('mck_login.update');
+
+        if (self::$form_errors) {
+            return false;
+        }
+
+        $ip = remote_addr();
+
+        if (is_blocklisted($ip)) {
+            self::error('ip_blocklisted');
+            return false;
+        }
+
+        if (!$email || !$name || !$RealName) {
+            self::error('all_fields_required');
+            return false;
+        }
+
+        $form = explode(';', (string) $form);
+
+        if ($form[1] != md5($form[0].get_pref('blog_uid'))) {
+            self::error('invalid_token');
+            return false;
+        }
+
+        $time = strtotime('-30 minutes');
+        if (($time != false) && (int) $form[0] < $time) {
+            self::error('form_expired');
+            return false;
+        }
+
+        if (self::field_strlen($email) > 100) {
+            self::error('email_too_long');
+        } elseif (!is_valid_email($email)) {
+            self::error('invalid_email');
+        }
+
+        if (self::field_strlen($name) < 3) {
+            self::error('username_too_short');
+        } elseif (self::field_strlen($name) > 64) {
+            self::error('username_too_long');
+        }
+
+        if (self::field_strlen($RealName) > 64) {
+            self::error('realname_too_long');
+        }
+
+        if (self::error()) {
+            return false;
+        }
+
+        if (
+            safe_row(
+                'name',
+                'txp_users',
+                "name = '".doSlash($name)."' OR email = '".doSlash($email)."' LIMIT 0, 1"
+            )
+        ) {
+            if (fetch('email', 'txp_users', 'email', $email)) {
+                self::error('email_in_use');
+            }
+
+            return false;
+        }
+
+        sleep(3);
+
+        if (empty($name)) {
+            $name = mck_login(array('name' => 'name'));
+        }
+
+        include_once txpath . '/lib/txplib_admin.php';
+        include_once txpath . '/include/txp_auth.php';
+
+        if (
+            update_user($name, $email, $RealName)
+             === false
+        ) {
+            self::error('saving_failed');
+            return false;
+        }
+
+        callback_event('mck_login.updated');
+        return true;
+    }
+
+    /**
      * Save a new password
      * @return bool
      * @see txp_validate(), txp_hash_password()
@@ -581,6 +694,7 @@ if (class_exists("\Textpattern\Tag\Registry")) {
         ->register("mck_login_if")
         ->register("mck_login_form")
         ->register("mck_register_form")
+        ->register("mck_update_form")
         ->register("mck_password_form")
         ->register("mck_reset_form")
         ->register("mck_login_input")
@@ -802,6 +916,75 @@ function mck_register_form($atts, $thing = '')
                 hInput('mck_register_form', $token).n.
                 parse($thing, true).n.
                 callback_event('mck_login.register_form').
+        '</form>';
+
+    mck_login_errors(null);
+
+    return $r;
+}
+
+/**
+ * Update user form
+ * @param array $atts
+ * @param string $atts[action] Form's action (target location).
+ * @param string $atts[id] Form's HTML id.
+ * @param string $atts[class] Form's HTML class.
+ * @param string $thing
+ * @return string HTML markup.
+ * <code>
+ *        <txp:mck_update_form>
+ *            <txp:mck_login_errors />
+ *            <txp:mck_login_input type="text" name="mck_update_email" />
+ *            <txp:mck_login_input type="text" name="mck_update_realname" />
+ *            <button type="submit">Update</button>
+ *        <txp:else />
+ *            User details updated.
+ *        </txp:mck_update_form>
+ * </code>
+ */
+
+function mck_update_form($atts, $thing = '')
+{
+    global $pretext;
+
+    $opt = lAtts(
+        array(
+            'action' => $pretext['request_uri'].'#mck_update_form',
+            'id' => 'mck_update_form',
+            'class' => 'mck_update_form',
+        ),
+        $atts
+    );
+
+    $r = mck_login::update_user($opt);
+    extract($opt);
+
+    if (mck_login(true) === false) {
+        return;
+    }
+
+    if ($r === true && !mck_login::error()) {
+        return parse($thing, false);
+    }
+
+    $token = ps('mck_update_form');
+
+    if (!$token || mck_login::error()) {
+        $timestamp = strtotime('now');
+        $token = $timestamp.';'.md5($timestamp . get_pref('blog_uid'));
+    }
+
+    if (mck_login::error()) {
+        $class .= ' mck_login_error';
+    }
+
+    mck_login_errors('update');
+
+    $r =
+        '<form method="post" id="'.htmlspecialchars($id).'" class="'.htmlspecialchars($class).'" action="'.htmlspecialchars($action).'">'.n.
+                hInput('mck_update_form', $token).n.
+                parse($thing, true).n.
+                callback_event('mck_login.update_form').
         '</form>';
 
     mck_login_errors(null);
