@@ -100,6 +100,8 @@ class mck_login
 
     public function logInHandler()
     {
+        callback_event('mck_login.login', '', 1);
+
         extract(doArray(
             array(
                 'name' => ps('mck_login_name'),
