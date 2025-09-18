@@ -127,7 +127,8 @@ class mck_login
                 return;
             }
 
-            if ((int) $form[0] < @strtotime('-30 minutes')) {
+            $time = strtotime('-30 minutes');
+            if (($time != false) && (int) $form[0] < $time) {
                 self::error('form_expired');
                 return;
             }
@@ -295,7 +296,8 @@ class mck_login
             return false;
         }
 
-        if ((int) $form[0] < @strtotime('-30 minutes')) {
+        $time = strtotime('-30 minutes');
+        if (($time != false) && (int) $form[0] < $time) {
             self::error('form_expired');
             return false;
         }
@@ -391,7 +393,8 @@ class mck_login
             return false;
         }
 
-        if ((int) $form[0] < @strtotime('-30 minutes')) {
+        $time = strtotime('-30 minutes');
+        if (($time != false) && (int) $form[0] < $time) {
             self::error('form_expired');
             return false;
         }
