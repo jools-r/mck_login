@@ -250,7 +250,15 @@ class mck_login
 
             $txpLang->swapStrings(null);
 
-            if (txpMail($r['email'], $subject, $message) === false) {
+            $sender_email = get_pref('smtp_from');
+
+            if (is_valid_email($sender_email)) {
+                $sent = txpMail($r['email'], $subject, $message, $sender_email);
+            } else {
+                $sent = txpMail($r['email'], $subject, $message);
+            }
+
+            if ($sent === false) {
                 self::error('could_not_mail');
                 return;
             }
@@ -329,7 +337,15 @@ class mck_login
 
         $txpLang->swapStrings(null);
 
-        if (txpMail($r['email'], $subject, $message) === false) {
+        $sender_email = get_pref('smtp_from');
+
+        if (is_valid_email($sender_email)) {
+            $sent = txpMail($r['email'], $subject, $message, $sender_email);
+        } else {
+            $sent = txpMail($r['email'], $subject, $message);
+        }
+
+        if ($sent === false) {
             self::error('could_not_mail');
             return false;
         }
@@ -469,7 +485,15 @@ class mck_login
 
         $txpLang->swapStrings(null);
 
-        if (txpMail($email, $subject, $message) === false) {
+        $sender_email = get_pref('smtp_from');
+
+        if (is_valid_email($sender_email)) {
+            $sent = txpMail($email, $subject, $message, $sender_email);
+        } else {
+            $sent = txpMail($email, $subject, $message);
+        }
+
+        if ($sent === false) {
             self::error('could_not_mail');
             return false;
         }
