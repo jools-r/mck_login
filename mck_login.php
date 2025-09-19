@@ -956,12 +956,12 @@ function mck_update_form($atts, $thing = '')
         $atts
     );
 
-    $r = mck_login::update_user($opt);
-    extract($opt);
-
     if (mck_login(true) === false) {
         return;
     }
+
+    $r = mck_login::update_user($opt);
+    extract($opt);
 
     if ($r === true && !mck_login::error()) {
         return parse($thing, false);
