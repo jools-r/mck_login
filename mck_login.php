@@ -521,11 +521,6 @@ class mck_login
             return false;
         }
 
-        if (!$email || !$name || !$RealName) {
-            self::error('all_fields_required');
-            return false;
-        }
-
         $form = explode(';', (string) $form);
 
         if ($form[1] != md5($form[0].get_pref('blog_uid'))) {
@@ -561,6 +556,8 @@ class mck_login
 
         sleep(3);
 
+        $email = !empty($email) ? $email : mck_login(array('name' => 'email'));
+        $RealName = !empty($RealName) ? $RealName : mck_login(array('name' => 'RealName'));
 
         include_once txpath . '/lib/txplib_admin.php';
         include_once txpath . '/include/txp_auth.php';
