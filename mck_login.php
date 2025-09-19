@@ -534,21 +534,27 @@ class mck_login
             return false;
         }
 
-        if (self::field_strlen($email) > 100) {
-            self::error('email_too_long');
-        } elseif (!is_valid_email($email)) {
-            self::error('invalid_email');
-        }
-
-
-        if (self::field_strlen($RealName) > 64) {
-            self::error('realname_too_long');
-        }
-
+        if (!empty($email)) {
+            if (self::field_strlen($email) > 100) {
+                self::error('email_too_long');
+            } elseif (!is_valid_email($email)) {
+                self::error('invalid_email');
+            }
 
             if (fetch('email', 'txp_users', 'email', $email)) {
                 self::error('email_in_use');
             }
+        }
+
+        if (!empty($RealName)) {
+            if (self::field_strlen($RealName) > 64) {
+                self::error('realname_too_long');
+            }
+
+            if (fetch('RealName', 'txp_users', 'RealName', $RealName)) {
+                self::error('realname_in_use');
+            }
+        }
 
         if (self::error()) {
             return false;
