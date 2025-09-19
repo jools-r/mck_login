@@ -10,6 +10,7 @@ p. The plugin comes with number of public-side tags for handling user logins, ne
 * @<txp:mck_login_if>@
 * @<txp:mck_login_form />@
 * @<txp:mck_register_form />@
+* @<txp:mck_update_form />@
 * @<txp:mck_password_form />@
 * @<txp:mck_reset_form />@
 * @<txp:mck_login_bouncer />@
@@ -34,6 +35,8 @@ p. The plugin comes with range of callback events and hooks that allow third-par
 * mck_login.register_form
 * mck_login.register
 * mck_login.registered
+* mck_login.update
+* mck_login.updated
 * mck_login.login_form
 * mck_login.password_form
 * mck_login.save_password
