@@ -781,6 +781,14 @@ function mck_login($atts)
         return $data;
     }
 
+    if (ps('mck_update_email')) {
+        $data['email'] = ps('mck_update_email');
+    }
+
+    if (ps('mck_update_realname')) {
+        $data['RealName'] = ps('mck_update_realname');
+    }
+
     extract(lAtts(
         array(
                 'name' => 'RealName',
