@@ -495,7 +495,7 @@ class mck_login
         extract(doArray(
             array(
                 'email' => ps('mck_update_email'),
-                'name' => ps('mck_update_name'),
+                'name' => mck_login(array('name' => 'name')),
                 'RealName' => ps('mck_update_realname'),
                 'form' => ps('mck_update_form'),
             ),
@@ -545,39 +545,22 @@ class mck_login
             self::error('invalid_email');
         }
 
-        if (self::field_strlen($name) < 3) {
-            self::error('username_too_short');
-        } elseif (self::field_strlen($name) > 64) {
-            self::error('username_too_long');
-        }
 
         if (self::field_strlen($RealName) > 64) {
             self::error('realname_too_long');
         }
 
-        if (self::error()) {
-            return false;
-        }
 
-        if (
-            safe_row(
-                'name',
-                'txp_users',
-                "name = '".doSlash($name)."' OR email = '".doSlash($email)."' LIMIT 0, 1"
-            )
-        ) {
             if (fetch('email', 'txp_users', 'email', $email)) {
                 self::error('email_in_use');
             }
 
+        if (self::error()) {
             return false;
         }
 
         sleep(3);
 
-        if (empty($name)) {
-            $name = mck_login(array('name' => 'name'));
-        }
 
         include_once txpath . '/lib/txplib_admin.php';
         include_once txpath . '/include/txp_auth.php';
